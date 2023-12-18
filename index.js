@@ -7,6 +7,9 @@ const expressPino = require("express-pino-logger");
 const log = require("./Models/log");
 const users = require("./Routes/users");
 const jobs = require("./Routes/jobs");
+const deleteTask=require('./Corn Task/DeleteJobs')
+const corn = require('node-cron');
+
 require("dotenv").config();
 
 const cors = require("cors");
@@ -89,3 +92,4 @@ sequelize
   });
 
 sequelize.sync();
+corn.schedule('*/10 * * * *', deleteTask.CornTask);

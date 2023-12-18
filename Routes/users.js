@@ -47,6 +47,8 @@ async function get_Expiration_Time_stamp_From_Database(email){
 
 }
 
+
+
 async function update_user(email,token,password){
   try {
     console.log(email,token,password);
@@ -56,7 +58,7 @@ async function update_user(email,token,password){
         } else {
         
           hashPasswords=hashPassword(password);
-          await users.update({ rememberToken:"",isVerified:true,emailTime:"",password:hashPasswords } ,{where:{email: email, rememberToken:token}},)
+          await users.update({ rememberToken:"",isVerified:true,emailTime:"",password:hashPasswords } ,{where:{rememberToken:token}},)
           .then((result)=>{
           });
         }    
@@ -67,9 +69,7 @@ async function update_user(email,token,password){
  
 }
 
-Router
-.route('/createuser')
-.post(async (req,res)=>{
+Router.route('/createuser').post(async (req,res)=>{
  const {firstName,lastName,email} = req.body;
   try {
     const validationResult = uservalidator.validation({firstName,lastName,email});
@@ -99,11 +99,8 @@ Router
 });
 
 
-
-Router.route('/createPassword/:email/:token').post(async  (req, res) => {
+Router.route('/createPassword/:token').post(async  (req, res) => {
     try {
-      
-    const email = req.params.email;
     const token=req.params.token; 
     const password=req.body.password;
     const storedExpirationTimestamp = await get_Expiration_Time_stamp_From_Database(email); 
@@ -116,6 +113,7 @@ Router.route('/createPassword/:email/:token').post(async  (req, res) => {
     if(storedExpirationTimestamp === ''){
       return res.sendStatus(400);
     }
+
     console.log(time1,time2);
     if (time1 < time2) {
 
@@ -134,13 +132,14 @@ Router.route('/createPassword/:email/:token').post(async  (req, res) => {
         res.json(error);    
     }    
     });
-  
-  
-Router.route('/findAll').get((req,res)=>{
+    
+Router.route('/findAll').get(async (req,res)=>{
      try {
+      const acitivityusers= await users.findAll({where:{}});
           users.findAll()
             .then(users => {
               console.log('Users found:', users);
+              users=users.map(user => user.toJSON())
               res.json(users);
             })
             .catch(error => {
@@ -152,8 +151,6 @@ Router.route('/findAll').get((req,res)=>{
       console.log(error);
      }
   });
-  
-
   
 Router.route('/login').post(async (req,res)=>{
   const  {email,password}=req.body;  
@@ -189,8 +186,7 @@ Router.route('/login').post(async (req,res)=>{
     
   })
 
-Router.route('/setPassword/:email/:token').
-post(async (req,res)=>{
+Router.route('/setPassword/:token').post(async (req,res)=>{
   const email = req.params.email;
   const {password}=req.body;
   const token=req.params.token; 
@@ -227,10 +223,35 @@ post(async (req,res)=>{
     }
 })
 
+Router.route('/findUser').get(async (req, res) => {
+  try {
+    const acitivityusers= await users.findAll({where:{}});
+    const allusers = await users.findAll({
+      where: {
+        [Op.or]: [
+          { firstName: { [Op.like]: `%${req.body.firstName}%` } }, // Case-insensitive search
+          { lastName: { [Op.like]: `%${req.body.firstName}%` } },
+           { email: { [Op.like]: `%${req.body.firstName}%` } }, // Case-insensitive email search
+        ],
+      },
+    });
 
-
-
-
+    if (allusers.length === 0) {
+      return res.status(401).send();
+    } else {
+      const allusersCount = allusers.length;
+      const allusersData = {
+        'TOTAL DATA': acitivityusers.length,
+        'GOT RECORD': allusersCount,
+      };
+      console.log(allusers);
+      const modifieduser = [allusersData, ...allusers.map(user => user.toJSON())];
+      return res.json(modifieduser);
+    }
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+});
 
 Router.route('/forgetPassword').post(async (req,res)=>{
  const {email} = req.body;

@@ -9,10 +9,11 @@ const  jobs= sequelize.define('jobs', {
     email:{type:DataTypes.STRING,allowNull:false,},
     cnic:{type:DataTypes.STRING,allowNull:false,},
     phoneNumber:{type:DataTypes.STRING,allowNull:false,},
-    status:{type:DataTypes.ENUM('accepted', 'rejected', 'pending'),allowNull:false,} ,
+    address:{type:DataTypes.STRING},
+    status:{type:DataTypes.ENUM('accepted', 'rejected', 'pending'),allowNull:false,defaultValue:'pending'} ,
     cv:{type: DataTypes.STRING,allowNull:false},
     age:{type:DataTypes.INTEGER,allowNull:false},
-    isDelete:{type:DataTypes.BOOLEAN,allowNull:false},
+    isDelete:{type:DataTypes.BOOLEAN,allowNull:false,defaultValue:false},
   },{
     tableName:"jobs",
     timestamps:true,

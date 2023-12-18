@@ -4,7 +4,7 @@ const nodemailer = require('nodemailer');
 //const JobsModel=require("../Models/jobs");
 //const failedJobsModel=require("../Models/failjobs");
 
-
+//http://localhost:${process.env.PORT}/users/createPassword/${email}/${token}
 const emailQueue = new Queue('UserVerficationEmail');
 function SendMAil(email,token) {
   console.log('Send Email');
@@ -16,12 +16,13 @@ function SendMAil(email,token) {
                 </head>
                 <body>
                   <p>This is a test email with a button:</p>
-                  <a href="http://localhost:${process.env.PORT}/users/createPassword/${email}/${token} http://localhost:8080/admin/set-password" target="_blank">
+                  <a href=" http://localhost:8081/setPassword/${token}" target="_blank">
                     <button>Click me!</button>
                   </a>
                 </body>
               </html>` 
             });
+            
 
             }
 

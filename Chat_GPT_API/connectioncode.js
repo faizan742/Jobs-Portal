@@ -2,7 +2,7 @@ const axios = require('axios');
 const express = require('express');
 
 require('dotenv').config();
-const apiKey = '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';
+const apiKey = '';
 const apiUrl = 'https://api.openai.com/v1/engines/davinci/completions';
 const Router = express.Router();
 Router.use(express.json());
