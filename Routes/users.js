@@ -150,7 +150,7 @@ Router.route('/findAll').get(Middleware1.checkJWT,async (req,res)=>{
       offset: offset,
     });
   
-    
+
     const totalCount = await users.count(); // Get total count for pagination
   
     res.json({
@@ -307,15 +307,34 @@ Router.route('/forgetPassword').post(async (req,res)=>{
 }    
 });
 
+Router.route('/ResendEmail').post(async (req,res)=>{
+ const {email} = req.body;
+  try {
+    
+    if (email==='' || email==null ) {
+                res.send(400);
+      } else {
+        
+        let emailTime=generateExpirationTimestamp();
+        let token=generateRandomToken(12);
+        
+        users.update( {rememberToken:token,emailTime:emailTime.toString()} ,{where:{email: email}},).then(() => {      
+        
+          passwordMethods.SendMAil(email,token); 
+          return res.send(200);                 
+        })
+        .catch((error) => {
+          res.send(401);
+          console.error('Error saving user:', error);
+        });
+        
 
-
-
-
-
-
-
-
-
+      }
+} catch (error) {
+  res.send(401);
+  console.log('error',error); 
+}    
+});
 
 
 
