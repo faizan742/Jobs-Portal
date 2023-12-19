@@ -7,7 +7,9 @@ const { log } = require('console');
 const jobs=require('../Models/jobs');
 const multer = require('multer');
 const uuid = require('uuid');
-const downloadPDF=require('../Quene/downloadata')
+const downloadPDF=require('../Quene/downloadata');
+const { request } = require('http');
+const Middleware1=require('../Middleware/auth');
 require("dotenv").config();
 
 var jobsdata=[];
@@ -117,22 +119,41 @@ Router.route('/addJobs').post(async(req,res)=>{
   
 });
 
-Router.route('/viewJobs').get((req,res)=>{
+Router.route('/viewJobs').get(Middleware1.checkJWT,(req,res)=>{
   try {
-    jobs.findAll({where:{isDelete:false}})
-            .then(alljobs => {
-              console.log('JOBS found:', alljobs);
-              alljobs=alljobs.map(ajob => ajob.toJSON());
-              res.json(alljobs);
-
-            });
-      
+    const page = parseInt(req.query.page) || 1;
+    const pageSize = parseInt(req.query.pageSize) || 10; // Set a default page size
+  
+    const offset = (page - 1) * pageSize;
+  
+    jobs.findAll({
+      where: { isDelete: false },
+      limit: pageSize,
+      offset: offset,
+    })
+      .then(result => {
+        const totalJobs = result.count;
+        const jobsData = result.map(job => job.toJSON());
+  
+        const response = {
+          currentPage: page,
+          pageSize: pageSize,
+          totalJobs: totalJobs,
+          jobs: jobsData,
+        };
+  
+        res.json(response);
+      })
+      .catch(error => {
+        console.error('Error querying database:', error);
+        res.status(500).json({ error: 'Internal server error' });
+      });
   } catch (error) {
-   res.send(401);
-   console.log(error);
+    console.error('Error:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
-Router.route('/acceptJobs').get(async ( req,res)=>{
+Router.route('/acceptJobs').get(Middleware1.checkJWT,async ( req,res)=>{
   try {
     
     await jobs.update({ status:'accepted' } ,{where:{email: email}},)
@@ -144,7 +165,7 @@ Router.route('/acceptJobs').get(async ( req,res)=>{
   }
 });
 
-Router.route('/rejectJobs').get(async(req,res)=>{
+Router.route('/rejectJobs').get(Middleware1.checkJWT,async(req,res)=>{
   try {
     await jobs.update({ status:'rejected' } ,{where:{email: email}},)
     res.send(200).json({message:'You Has Been Rejected'});
@@ -155,7 +176,7 @@ Router.route('/rejectJobs').get(async(req,res)=>{
 });
 
 
-Router.route('/deleteJobs').get(async(req,res)=>{
+Router.route('/deleteJobs').get(Middleware1.checkJWT,async(req,res)=>{
   try {
     await jobs.update({ isDelete:true } ,{where:{email: email}},)
      res.send(200).json({message:'You Has Been Rejected'});
@@ -166,7 +187,7 @@ Router.route('/deleteJobs').get(async(req,res)=>{
   }
 });
 
-Router.route('/downloadCV').get((req,res)=>{
+Router.route('/downloadCV').get(Middleware1.checkJWT,(req,res)=>{
   try {
     downloadPDF.DownloadData(req.query.name);
     res.send(200).json({message:'CV HAS BEEN DOWNLOADED'});  
@@ -176,7 +197,7 @@ Router.route('/downloadCV').get((req,res)=>{
   }
 });
 
-Router.route('/findJobs').get(async (req, res) => {
+Router.route('/findJobs').get(Middleware1.checkJWT,async (req, res) => {
   try {
     acitivityJobs= await jobs.findAll({where:{isDelete:false}});
             

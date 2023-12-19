@@ -4,11 +4,13 @@ const sequelize = require("./Database/database");
 const pino = require("pino");
 const pinoPretty = require("pino-pretty");
 const expressPino = require("express-pino-logger");
-const log = require("./Models/log");
+const logs = require("./Models/log");
+const logsall=require('./Routes/logs');
 const users = require("./Routes/users");
 const jobs = require("./Routes/jobs");
 const deleteTask=require('./Corn Task/DeleteJobs')
 const corn = require('node-cron');
+const jwt = require('jsonwebtoken');
 
 require("dotenv").config();
 
@@ -25,7 +27,7 @@ app.use(cors());
 
 async function saveLogToDatabase(logData) {
   try {
-    log.create(logData);
+    logs.create(logData);
   } catch (error) {
     console.error("Error saving log to the database:", error);
   }
@@ -39,6 +41,8 @@ app.use((req, res, next) => {
   console.log(req.headers);
   console.log(res.body);
   res.on("finish", async () => {
+    const auth_header = req.headers.authorization;
+    if(!auth_header)  {
     saveLogToDatabase({
       username: req.hostname,
       method: req.method,
@@ -47,6 +51,22 @@ app.use((req, res, next) => {
       email: "NONE",
       userAgent: req.headers["user-agent"],
     });
+
+   }else{
+    const accessToken = auth_header.split(' ')[1]
+    console.log(accessToken);
+    const UserInfo=jwt.decode(accessToken);
+    saveLogToDatabase({
+      username: req.hostname,
+      method: req.method,
+      status: res.statusCode,
+      path: req.path,
+      email: UserInfo.email,
+      userName:UserInfo.username,
+      userAgent: req.headers["user-agent"],
+    });
+   }
+    
   });
   next();
 });
@@ -61,7 +81,7 @@ app.use(limitrate);
 app.use(expressLogger);
 
 app.use("/users", users);
-app.use("/logs", log);
+app.use("/logs", logsall);
 app.use("/jobs", jobs);
 
 app.use(express.json());
