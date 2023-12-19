@@ -150,6 +150,7 @@ Router.route('/findAll').get(Middleware1.checkJWT,async (req,res)=>{
       offset: offset,
     });
   
+    
     const totalCount = await users.count(); // Get total count for pagination
   
     res.json({
@@ -183,7 +184,7 @@ Router.route('/login').post(async (req,res)=>{
             ,admin:result1.dataValues.isAdmin,email:result1.dataValues.email}, process.env.Secret_KEY, { expiresIn: '1d' });
           console.log(token);
           
-          res.json({email:result1.dataValues.email,username:result1.dataValues.username,jwt:token,isAdmin:result1.dataValues.isAdmin,
+          res.json({email:result1.dataValues.email,username:result1.dataValues.username,token:token,isAdmin:result1.dataValues.isAdmin,
             isVerified:result1.dataValues.isVerified});  
       }
       else
@@ -198,6 +199,7 @@ Router.route('/login').post(async (req,res)=>{
     }
   
     
+
   })
 
 Router.route('/setPassword/:token').post(async (req,res)=>{
@@ -259,7 +261,7 @@ Router.route('/findUser').get(Middleware1.checkJWT,async (req, res) => {
       offset: offset,
     });
   
-    const totalRecords = allUsers.count;
+    const totalRecords = await allUsers.count();
     const usersData = allUsers.rows.map(user => user.toJSON());
   
     const response = {
@@ -274,6 +276,7 @@ Router.route('/findUser').get(Middleware1.checkJWT,async (req, res) => {
     return res.status(500).json({ error: error.message });
   }
 });
+
 
 Router.route('/forgetPassword').post(async (req,res)=>{
  const {email} = req.body;

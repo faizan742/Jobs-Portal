@@ -10,6 +10,9 @@ const uuid = require('uuid');
 const downloadPDF=require('../Quene/downloadata');
 const { request } = require('http');
 const Middleware1=require('../Middleware/auth');
+const acceptmail=require('../Email/acceptedemail');
+const rejectmail=require('../Email/rejectedemail');
+const receivemail=require('../Email/receivedmail');
 require("dotenv").config();
 
 var jobsdata=[];
@@ -58,6 +61,7 @@ const uploadFile = (req, res) => {
             cnic:cnic,phoneNumber: phoneNumber,address:address,
             cv: filename,age:age,isDelete:false
           }).then((result) => {
+            receivemail.SendMAil(result.email);
             return res.status(201).json({ message: 'Applicant created successfully', data: result });
           });
           
@@ -103,8 +107,8 @@ Router.route('/addJobs').post(async(req,res)=>{
     
     const uploadedFileName = await uploadFile(req, res);
     console.log(uploadedFileName);
-      
-
+        
+  
             
 
   } catch (error) {
@@ -119,7 +123,7 @@ Router.route('/addJobs').post(async(req,res)=>{
   
 });
 
-Router.route('/viewJobs').get(Middleware1.checkJWT,(req,res)=>{
+Router.route('/viewJobs').get(Middleware1.checkJWT,async(req,res)=>{
   try {
     const page = parseInt(req.query.page) || 1;
     const pageSize = parseInt(req.query.pageSize) || 10; // Set a default page size
@@ -131,8 +135,8 @@ Router.route('/viewJobs').get(Middleware1.checkJWT,(req,res)=>{
       limit: pageSize,
       offset: offset,
     })
-      .then(result => {
-        const totalJobs = result.count;
+      .then(async result => {
+        const totalJobs =await jobs.count();
         const jobsData = result.map(job => job.toJSON());
   
         const response = {
@@ -156,19 +160,25 @@ Router.route('/viewJobs').get(Middleware1.checkJWT,(req,res)=>{
 Router.route('/acceptJobs').get(Middleware1.checkJWT,async ( req,res)=>{
   try {
     
-    await jobs.update({ status:'accepted' } ,{where:{email: email}},)
-    updateOjectList(email,'accepted');
-     res.send(200).json({message:'You Has Been Accepted'});
+    await jobs.update({ status:'accepted' } ,{where:{email: req.body.email}},)
+    //updateOjectList(email,'accepted');
+    acceptmail.SendMAil(req.body.email);
+    res.status(200).json({ message: 'You Have Been Accepted' });
+
   } catch (error) {
    res.send(401);
    console.log(error);
+
   }
 });
 
+
 Router.route('/rejectJobs').get(Middleware1.checkJWT,async(req,res)=>{
   try {
-    await jobs.update({ status:'rejected' } ,{where:{email: email}},)
-    res.send(200).json({message:'You Has Been Rejected'});
+    await jobs.update({ status:'rejected' } ,{where:{email: req.body.email}},)
+    rejectmail.SendMAil(req.body.email);
+    res.status(200).json({ message: 'You Have Been Rejected' });
+
   } catch (error) {
    res.send(401);
    console.log(error);
@@ -179,7 +189,7 @@ Router.route('/rejectJobs').get(Middleware1.checkJWT,async(req,res)=>{
 Router.route('/deleteJobs').get(Middleware1.checkJWT,async(req,res)=>{
   try {
     await jobs.update({ isDelete:true } ,{where:{email: email}},)
-     res.send(200).json({message:'You Has Been Rejected'});
+     res.status(200).json({message:'You Has Been Rejected'});
       
   } catch (error) {
    res.send(401);
@@ -190,7 +200,7 @@ Router.route('/deleteJobs').get(Middleware1.checkJWT,async(req,res)=>{
 Router.route('/downloadCV').get(Middleware1.checkJWT,(req,res)=>{
   try {
     downloadPDF.DownloadData(req.query.name);
-    res.send(200).json({message:'CV HAS BEEN DOWNLOADED'});  
+    res.status(200).json({message:'CV HAS BEEN DOWNLOADED'});  
   } catch (error) {
    res.send(401);
    console.log(error);

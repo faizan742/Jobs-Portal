@@ -15,15 +15,34 @@ Router.use(express.urlencoded({ extended: true }));
 
 
 Router
-.route(Middleware1.AdmincheckJWT,'/getLogs')
-.get(async (req,res)=>{
+.route('/getLogs')
+.get(Middleware1.AdmincheckJWT,async (req,res)=>{
   try {
-   const allLogs  = await logs.findAll({where:{method:'POST'}});
-    res.json(allLogs);
-      
+    const page = parseInt(req.query.page) || 1;
+    const pageSize = parseInt(req.query.pageSize) || 10; // Set a default page size
+  
+    const offset = (page - 1) * pageSize;
+  
+    const allLogs = await logs.findAll({
+      where: { method: 'POST' },
+      limit: pageSize,
+      offset: offset,
+    });
+  
+    const totalLogs =await logs.count();
+    const logsData = allLogs.map(log => log.toJSON());
+  
+    const response = {
+      currentPage: page,
+      pageSize: pageSize,
+      totalLogs: totalLogs,
+      logs: logsData,
+    };
+  
+    res.json(response);
   } catch (error) {
-   res.send(401);
-   console.log(error);
+    console.error('Error:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

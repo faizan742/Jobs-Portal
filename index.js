@@ -8,23 +8,24 @@ const logs = require("./Models/log");
 const logsall=require('./Routes/logs');
 const users = require("./Routes/users");
 const jobs = require("./Routes/jobs");
+const chat=require("./Routes/chatgpt");
 const deleteTask=require('./Corn Task/DeleteJobs')
 const corn = require('node-cron');
 const jwt = require('jsonwebtoken');
-
 require("dotenv").config();
-
 const cors = require("cors");
 const logger = pino({ prettifier: pinoPretty });
-
 const expressLogger = expressPino({ logger });
-
 const rateLimit = require("express-rate-limit");
 const { DATE } = require("sequelize");
 const app = express();
 const port = process.env.PORT || "8000";
+const http = require('http');
+const socketIo = require('socket.io');
+const axios=require('axios');
+const savechat=require('./Models/Chat');
 app.use(cors());
-
+let UserInfo=[];
 async function saveLogToDatabase(logData) {
   try {
     logs.create(logData);
@@ -55,7 +56,7 @@ app.use((req, res, next) => {
    }else{
     const accessToken = auth_header.split(' ')[1]
     console.log(accessToken);
-    const UserInfo=jwt.decode(accessToken);
+    UserInfo=jwt.decode(accessToken);
     saveLogToDatabase({
       username: req.hostname,
       method: req.method,
@@ -83,9 +84,43 @@ app.use(expressLogger);
 app.use("/users", users);
 app.use("/logs", logsall);
 app.use("/jobs", jobs);
+app.use("/chat", chat);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+const server = http.createServer(app);
+const io = socketIo(server);
+
+const CHATGPT_API_URL = 'http://192.168.11.178:3031/chat/CHATGPT';
+
+io.on('connection', (socket) => {
+  console.log('A user connected');
+
+  socket.on('chat message', async (message) => {
+    try {
+      await savechat.create({user:'user',message:message});   
+      const response = await axios.post(CHATGPT_API_URL, { message });
+          
+      if(response.data.response==null,response.statusCode==429){
+        await savechat.create({user:'CHATGPT',message:'YOUR LIMIT HAS REACHED'});
+        socket.emit('chat message', 'YOUR LIMIT HAS REACHED');
+      }else{
+        await savechat.create({user:'CHATGPT',message:response.data.response});
+        socket.emit('chat message', response.data.response);
+      }      
+    } catch (error) {
+      console.error('Error processing message:', error.message);
+    }
+  });
+
+  socket.on('disconnect', () => {
+    console.log('A user disconnected');
+  });
+});
+
+
+
 
 app.get("/", (req, res) => {
   res.send("HI There this is base ");
