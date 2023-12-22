@@ -24,6 +24,7 @@ const http = require('http');
 const socketIo = require('socket.io');
 const axios=require('axios');
 const savechat=require('./Models/Chat');
+const auths=require('./Routes/auth');
 app.use(cors());
 let UserInfo=[];
 async function saveLogToDatabase(logData) {
@@ -83,14 +84,16 @@ app.use(expressLogger);
 
 app.use("/users", users);
 app.use("/logs", logsall);
-app.use("/jobs", jobs);
+app.use("/applicant", jobs);
 app.use("/chat", chat);
+app.use("/auth", auths);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 const server = http.createServer(app);
 const io = socketIo(server);
+
 
 const CHATGPT_API_URL = 'http://192.168.11.178:3031/chat/CHATGPT';
 

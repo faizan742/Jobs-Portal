@@ -100,7 +100,7 @@ Router.post('/upload',async (req, res) => {
 
 
 
-Router.route('/addJobs').post(async(req,res)=>{
+Router.route('/submitForm').post(async(req,res)=>{
   try {
       console.log(req.body);  
     
