@@ -36,7 +36,7 @@ Router
       currentPage: page,
       pageSize: pageSize,
       totalLogs: totalLogs,
-      logs: logsData,
+      data: logsData,
     };
   
     res.json(response);

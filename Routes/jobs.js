@@ -143,7 +143,7 @@ Router.route('/viewJobs').get(Middleware1.checkJWT,async(req,res)=>{
           currentPage: page,
           pageSize: pageSize,
           totalJobs: totalJobs,
-          jobs: jobsData,
+          data: jobsData,
         };
   
         res.json(response);
