@@ -1,5 +1,5 @@
 const express = require("express");
-//const users=require('./Routes/users');
+const chata=require('./Models/Chat');
 const sequelize = require("./Database/database");
 const pino = require("pino");
 const pinoPretty = require("pino-pretty");
@@ -21,7 +21,6 @@ const { DATE } = require("sequelize");
 const app = express();
 const port = process.env.PORT || "8000";
 const http = require('http');
-const socketIo = require('socket.io');
 const axios=require('axios');
 const savechat=require('./Models/Chat');
 const auths=require('./Routes/auth');
@@ -91,7 +90,8 @@ app.use("/auth", auths);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-const server = http.createServer(app);
+var server = http.createServer(app);
+const socketIo = require('socket.io');
 const io = socketIo(server);
 
 
@@ -105,7 +105,7 @@ io.on('connection', (socket) => {
       await savechat.create({user:'user',message:message});   
       const response = await axios.post(CHATGPT_API_URL, { message });
           
-      if(response.data.response==null,response.statusCode==429){
+      if(response.data.response==null || response.statusCode==429){
         await savechat.create({user:'CHATGPT',message:'YOUR LIMIT HAS REACHED'});
         socket.emit('chat message', 'YOUR LIMIT HAS REACHED');
       }else{
@@ -129,7 +129,7 @@ app.get("/", (req, res) => {
   res.send("HI There this is base ");
 });
 
-app.listen(port, (err) => {
+server.listen(port, (err) => {
   if (err) {
     return console.log("ERROR: " + err);
   }
