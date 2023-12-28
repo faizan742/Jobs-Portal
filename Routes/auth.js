@@ -86,8 +86,8 @@ Router.route('/createuser').post(Middleware1.checkJWT,async (req,res)=>{
           res.send(200);                 
         })
         .catch((error) => {
-          res.send(401);
           console.error('Error saving user:', error);
+          return res.send(401);
         });
 
       }
@@ -137,6 +137,7 @@ Router.route('/createPassword/:token').post(async  (req, res) => {
     
 Router.route('/findAll').get(Middleware1.checkJWT,async (req,res)=>{
   try {
+    console.log('hi');
     const page = parseInt(req.query.page) || 1;
     const pageSize = parseInt(req.query.pageSize) || 10; // Set a default page size
   
@@ -148,10 +149,12 @@ Router.route('/findAll').get(Middleware1.checkJWT,async (req,res)=>{
       offset: offset,
     });
   
+    
+
 
     const totalCount = await users.count(); // Get total count for pagination
   
-    res.json({
+    return res.json({
       data: activityUsers.map(user => user.toJSON()),
       currentPage: page,
       pageSize: pageSize,
@@ -159,7 +162,7 @@ Router.route('/findAll').get(Middleware1.checkJWT,async (req,res)=>{
     });
   } catch (error) {
     console.error('Error querying database:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json({ error: 'Internal server error' });
   }
   
       
@@ -174,6 +177,7 @@ Router.route('/login').post(async (req,res)=>{
       console.log(result1);
       bcrypt.compare(password, result1.dataValues.password, function(err, result) {
       
+
         if(err){
         console.log(err);
       }
@@ -182,7 +186,7 @@ Router.route('/login').post(async (req,res)=>{
             ,admin:result1.dataValues.isAdmin,email:result1.dataValues.email}, process.env.Secret_KEY, { expiresIn: '1d' });
           console.log(token);
           
-          res.json({email:result1.dataValues.email,username:result1.dataValues.username,token:token,isAdmin:result1.dataValues.isAdmin,
+         return  res.json({email:result1.dataValues.email,username:result1.dataValues.username,token:token,isAdmin:result1.dataValues.isAdmin,
             isVerified:result1.dataValues.isVerified});  
       }
       else

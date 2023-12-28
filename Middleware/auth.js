@@ -4,7 +4,7 @@ require("dotenv").config();
 function checkJWT(req,res,next){
 try {
     const auth_header = req.headers.authorization;
-    if(!auth_header)  return res.send(401, 'Unauthorized request')
+    if(!auth_header)  return res.status(401).json({ message:'Unauthorized request'});
     
     const accessToken = auth_header.split(' ')[1]
     console.log(accessToken);
@@ -12,14 +12,17 @@ try {
         
         if (err) {
             console.error('JWT verification failed:', err.message);
-            return res.send(401, 'Unauthorized request')
+            throw "error";
           } else {
             console.log('JWT decoded:', decoded);
+            next();
           }
+
     })
-    next();
+    
 } catch (error) {
-    res.send(401, 'Unauthorized request')
+
+   return  res.status(401).json({ message:'Unauthorized request'});
 }
 }
 
@@ -39,17 +42,20 @@ function AdmincheckJWT(req,res,next){
         jwt.verify(accessToken,process.env.Secret_KEY , (err, decoded) => {
           if (err) {
               console.error('JWT verification failed:', err.message);
-              return res.send(401, 'Unauthorized request')
-            } else {
+              throw "error"; 
+                       
+            } 
+            else {
               console.log('JWT decoded:', decoded);
+              next();
             }
       })
     
-      next();
+      
 
       }else
       {
-        return res.send(401, 'YOU ARE NOT ADMIN');
+        throw "error";
       }
       
   } catch (error) {

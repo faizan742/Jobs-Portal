@@ -2,7 +2,7 @@ const axios = require('axios');
 const express = require('express');
 
 require('dotenv').config();
-const apiKey = '';
+const apiKey = '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';
 const apiUrl = 'https://api.openai.com/v1/engines/davinci/completions';
 const Router = express.Router();
 Router.use(express.json());
@@ -36,19 +36,21 @@ async function queryChatGPT(prompt) {
     }
 }
 Router.route('/CHATGPT').post(async (req,res)=>{
-
-    queryChatGPT(req.body.prompt)
+        
+    queryChatGPT(req.body.message)
     .then(completion => {
         if (completion) {
             console.log('Completion:', completion);
             res.json('Completion:', completion);
         } else {
             console.log('Failed to get completion.');
-            res.sendStatus(429);
+            return res.status(429).json({ error: ' NOT WORKING Becasue of Limit' });
         }
     })
     .catch(err =>{
         console.error('Error:', err);
+        return res.status(429).json({ error: ' NOT WORKING Becasue of Limit' });
+
         
     } 
       

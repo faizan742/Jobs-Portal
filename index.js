@@ -95,6 +95,7 @@ const socketIo = require('socket.io');
 const io = socketIo(server);
 
 
+
 const CHATGPT_API_URL = 'http://192.168.11.178:3031/chat/CHATGPT';
 
 io.on('connection', (socket) => {
@@ -104,16 +105,13 @@ io.on('connection', (socket) => {
     try {
       await savechat.create({user:'user',message:message});   
       const response = await axios.post(CHATGPT_API_URL, { message });
-          
-      if(response.data.response==null || response.statusCode==429){
+
+      await savechat.create({user:'CHATGPT',message:response.data.response});
+        socket.emit('chat message', response.data.response);
+    } catch (error) {
         await savechat.create({user:'CHATGPT',message:'YOUR LIMIT HAS REACHED'});
         socket.emit('chat message', 'YOUR LIMIT HAS REACHED');
-      }else{
-        await savechat.create({user:'CHATGPT',message:response.data.response});
-        socket.emit('chat message', response.data.response);
-      }      
-    } catch (error) {
-      console.error('Error processing message:', error.message);
+        console.error('Error processing message:', error.message);
     }
   });
 

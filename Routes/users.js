@@ -19,7 +19,7 @@ Router.use(express.json());
 Router.use(express.urlencoded({ extended: true }));
 
 
-Router.route('/profile').get(Middleware1.checkJWT,async (req,res)=>{
+Router.route('/me').get(Middleware1.checkJWT,async (req,res)=>{
   try {
    
     const allUsers = await users.findAll({
