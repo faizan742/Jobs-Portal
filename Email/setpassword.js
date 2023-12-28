@@ -16,7 +16,7 @@ function SendMAil(email,token) {
                 </head>
                 <body>
                   <p>This is a test email with a button:</p>
-                  <a href="http://localhost:8081/ResetPassword/${token} " target="_blank">
+                  <a href="http://localhost:8080/admin/set-password/${token}" target="_blank">
                     <button>Click me!</button>
                   </a>
                 </body>
